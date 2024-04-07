@@ -1,0 +1,94 @@
+/*Course Dependency Resolution:
+•	Topological Sorting: Utilize a topological sorting algorithm like Kahn's Algorithm to resolve course prerequisites efficiently. This ensures that prerequisite courses are completed before a course is taken, optimizing course completion time.
+•	Parallel Enrolment: Allow users to enroll in multiple courses concurrently. The algorithm manages dependencies by ensuring that prerequisites are satisfied for each course before allowing enrollment.
+•	Circular Dependency Handling: Detect and handle circular dependencies intelligently. This can involve providing feedback to users about the dependency cycle or automatically breaking cycles based on predefined rules.
+*/
+using System.Collections.Generic;
+
+public class Graph
+{
+    private readonly Dictionary<string, List<string>> graph;
+
+    public Graph()
+    {
+        graph = new Dictionary<string, List<string>>();
+    }
+
+    public void AddEdge(string u, string v)
+    {
+        if (!graph.ContainsKey(u))
+        {
+            graph[u] = new List<string>();
+        }
+        graph[u].Add(v);
+    }
+
+    public List<string> TopologicalSortUtil(string v, Dictionary<string, bool> visited, Stack<string> stack)
+    {
+        visited[v] = true;
+
+        foreach (string neighbor in graph[v])
+        {
+            if (!visited[neighbor])
+            {
+                TopologicalSortUtil(neighbor, visited, stack);
+            }
+        }
+
+        stack.Push(v);
+        return stack;
+    }
+
+    public List<string> TopologicalSort()
+    {
+        var visited = new Dictionary<string, bool>();
+        var stack = new Stack<string>();
+
+        foreach (string course in graph.Keys)
+        {
+            if (!visited.ContainsKey(course))
+            {
+                TopologicalSortUtil(course, visited, stack);
+            }
+        }
+
+        var sortedCourses = stack.ToList();
+        sortedCourses.Reverse();
+        return sortedCourses;
+    }
+}
+
+public static class DependencyResolver
+{
+    public static List<string> ResolveDependencies(List<string> courses, List<Tuple<string, string>> dependencies)
+    {
+        var graph = new Graph();
+        foreach (var dependency in dependencies)
+        {
+            graph.AddEdge(dependency.Item2, dependency.Item1); // Prerequisite -> Course
+        }
+
+        var sortedCourses = graph.TopologicalSort();
+        return sortedCourses;
+    }
+}
+
+public static void Main(string[] args)
+{
+    var courses = new List<string>() { "Course A", "Course B", "Course C", "Course D", "Course E" };
+    var dependencies = new List<Tuple<string, string>>()
+    {
+        new Tuple<string, string>("Course B", "Course A"),
+        new Tuple<string, string>("Course C", "Course A"),
+        new Tuple<string, string>("Course D", "Course B"),
+        new Tuple<string, string>("Course D", "Course C"),
+        new Tuple<string, string>("Course E", "Course D"),
+    };
+
+    var sortedCourses = DependencyResolver.ResolveDependencies(courses, dependencies);
+    Console.WriteLine("Course order after resolving dependencies:");
+    foreach (var course in sortedCourses)
+    {
+        Console.WriteLine(course);
+    }}
+//This algorithm implements a directed graph using an adjacency list representation. It then performs topological sorting to determine the order in which courses can be taken, ensuring that prerequisite courses are completed before their dependent courses. The resolve_dependencies function takes a list of courses and their dependencies as input and returns the sorted order in which the courses should be taken.
